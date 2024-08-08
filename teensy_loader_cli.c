@@ -257,17 +257,6 @@ usb_dev_handle * open_usb_device(int vid, int pid, bool filter)
 				printf_verbose("Found device but unable to open\n");
 				continue;
 			}
-			#ifdef LIBUSB_HAS_GET_DRIVER_NP
-			r = usb_get_driver_np(h, 0, buf, sizeof(buf));
-			if (r >= 0) {
-				r = usb_detach_kernel_driver_np(h, 0);
-				if (r < 0) {
-					usb_close(h);
-					printf_verbose("Device is in use by \"%s\" driver\n", buf);
-					continue;
-				}
-			}
-			#endif
 
 			if(filter) {
 
@@ -301,8 +290,19 @@ usb_dev_handle * open_usb_device(int vid, int pid, bool filter)
 					man,
 					sn
 				);
-
 			}
+
+			#ifdef LIBUSB_HAS_GET_DRIVER_NP
+			r = usb_get_driver_np(h, 0, buf, sizeof(buf));
+			if (r >= 0) {
+				r = usb_detach_kernel_driver_np(h, 0);
+				if (r < 0) {
+					usb_close(h);
+					printf_verbose("Device is in use by \"%s\" driver\n", buf);
+					continue;
+				}
+			}
+			#endif
 
 			// Mac OS-X - removing this call to usb_claim_interface() might allow
 			// this to work, even though it is a clear misuse of the libusb API.
